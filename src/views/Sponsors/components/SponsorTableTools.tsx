@@ -1,0 +1,87 @@
+import { useRef } from 'react'
+import Button from '@/components/ui/Button'
+import {
+    getCustomers,
+    setTableData,
+    setFilterData,
+    useAppDispatch,
+    useAppSelector,
+} from '../store'
+import SponsorTableSearch from './SponsorTableSearch'
+import SponsorTableFilter from './SponsorTableFilter'
+import cloneDeep from 'lodash/cloneDeep'
+import type { TableQueries } from '@/@types/common'
+import { HiOutlinePlusCircle } from 'react-icons/hi'
+
+type SponsorToolsProps = {
+    openForm: () => void
+}
+
+const SponsorTableTools = (props: SponsorToolsProps) => {
+    const { openForm } = props
+    const dispatch = useAppDispatch()
+
+    const inputRef = useRef<HTMLInputElement>(null)
+
+    const tableData = useAppSelector(
+        (state) => state.rwwSponsors.data.tableData
+    )
+
+    const handleInputChange = (val: string) => {
+        const newTableData = cloneDeep(tableData)
+        newTableData.query = val
+        newTableData.pageIndex = 1
+        if (typeof val === 'string' && val.length > 1) {
+            fetchData(newTableData)
+        }
+
+        if (typeof val === 'string' && val.length === 0) {
+            fetchData(newTableData)
+        }
+    }
+
+    const fetchData = (data: TableQueries) => {
+        dispatch(setTableData(data))
+        dispatch(getCustomers(data))
+    }
+
+    const onClearAll = () => {
+        const newTableData = cloneDeep(tableData)
+        newTableData.query = ''
+        if (inputRef.current) {
+            inputRef.current.value = ''
+        }
+        dispatch(setFilterData({ status: '' }))
+        fetchData(newTableData)
+    }
+
+    return (
+        <div className="md:flex items-center justify-between">
+            <div className="md:flex items-center gap-4">
+                <SponsorTableSearch
+                    ref={inputRef}
+                    onInputChange={handleInputChange}
+                />
+                {/* <SponsorTableFilter /> */}
+                <div className="mb-4 mr-2">
+                    <Button size="sm" onClick={onClearAll}>
+                        Clear All
+                    </Button>
+                </div>
+            </div>
+            <div className="mb-4">
+                <Button
+                    size="sm"
+                    variant="solid"
+                    // variant="twoTone"
+                    icon={<HiOutlinePlusCircle />}
+                    onClick={openForm}
+                >
+                    Add Sponsor
+                </Button>
+            </div>
+        </div>
+    )
+}
+
+export default SponsorTableTools
